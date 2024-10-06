@@ -1,0 +1,65 @@
+Sub AnalyzeStockData()
+    Dim ws As Worksheet
+    Dim lastRow As Long
+    Dim i As Long
+    Dim ticker As String
+    Dim Opening_Price As Double
+    Dim Closing_Price As Double
+    Dim Total_Volume As Double
+    Dim quarterlyChange As Double
+    Dim percentChange As Double
+    Dim outputRow As Long
+    
+    ' Loop through each worksheet (each quarter)
+    For Each ws In ThisWorkbook.Worksheets
+        lastRow = ws.Cells(ws.Rows.Count, "A").End(xlUp).Row
+        outputRow = 2 ' Start output from the second row
+
+        ' Set headers for output
+        ws.Cells(1, 9).Value = "Ticker"
+        ws.Cells(1, 10).Value = "Quarterly Change"
+        ws.Cells(1, 11).Value = "Percent Change"
+        ws.Cells(1, 12).Value = "Total Stock Volume"
+
+        ' Initialize variables for each worksheet
+        Opening_Price = ws.Cells(2, 3).Value ' Assuming open price is in column C
+        Total_Volume = 0 ' Reset total volume for each worksheet
+
+        ' Loop through each row in the worksheet
+        For i = 2 To lastRow
+            ticker = ws.Cells(i, 1).Value ' Assuming ticker is in column A
+            
+            ' Check if we are at the last row of the current ticker
+            If i = lastRow Or ws.Cells(i + 1, 1).Value <> ticker Then
+                Closing_Price = ws.Cells(i, 6).Value ' Assuming close price is in column F
+                Total_Volume = Total_Volume + ws.Cells(i, 7).Value ' Assuming volume is in column G
+
+                ' Calculate quarterly change and percentage change
+                quarterlyChange = Closing_Price - Opening_Price
+                If Opening_Price <> 0 Then
+                    percentChange = (quarterlyChange / Opening_Price) * 1
+                Else
+                    percentChange = 0 ' Avoid division by zero
+                End If
+                
+                ' Output results to the next available row
+                ws.Cells(outputRow, 9).Value = ticker ' Output ticker in column I
+                ws.Cells(outputRow, 10).Value = quarterlyChange ' Output quarterly change in column J
+                ws.Cells(outputRow, 11).Value = percentChange ' Output percent change in column K
+                ws.Cells(outputRow, 12).Value = Total_Volume ' Output total stock volume in column L
+                
+                ' Format the percent change as a percentage
+                ws.Cells(outputRow, 11).NumberFormat = "0.00%" ' Format the cell as a percentage
+
+                outputRow = outputRow + 1
+                
+                ' Prepare for the next ticker
+                If i < lastRow Then
+                    Opening_Price = ws.Cells(i + 1, 3).Value ' Set opening price for the next ticker
+                End If
+            Else
+                Total_Volume = Total_Volume + ws.Cells(i, 7).Value ' Accumulate total volume
+            End If
+        Next i
+    Next ws
+End Sub
